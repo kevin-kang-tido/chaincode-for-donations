@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "name": "basic asset transfer",
+            "type": "hlf-go",
+            "request": "launch",
+            "isCaas": false,
+            "program": "${workspaceFolder}/cmd/main.go",
+            "env": {
+                "CORE_CHAINCODE_ID_NAME": "chaincode-donation:v1"
+            }
+        }
+    ]
+}
