@@ -8,7 +8,9 @@ import (
 )
 
 func main() {
+	// create a instance of the donatin which get the chaincode struct from contract 
 	donationContract := new(contract.DonationContract)
+	// using contrapapi function to create new chaincode  
 	chaincode, err := contractapi.NewChaincode(donationContract)
 	// if create the donation got the error 
 	if err != nil {

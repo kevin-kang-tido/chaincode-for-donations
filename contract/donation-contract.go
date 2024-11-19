@@ -2,6 +2,7 @@ package contract
 
 import (
 	"chaincode-donation/models"
+	"chaincode-donation/utils"
 	"encoding/json"
 	"fmt"
 
@@ -24,7 +25,8 @@ func (dc *DonationContract) InitLedger(ctx contractapi.TransactionContextInterfa
 	}
 
 	for _, donation := range donations {
-		donationJSON, err := json.Marshal(donation)
+		// donationJSON, err := json.Marshal(donation)
+	    donationJSON, err := utils.ToJSON(donation)
 		if err != nil {
 			return fmt.Errorf("failed to marshal donation: %v", err)
 		}
