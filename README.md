@@ -30,3 +30,19 @@ peer lifecycle chaincode package chaincode-donation.tar.gz --path ./chaincode-do
 peer lifecycle chaincode install chaincode-donation.tar.gz
 
 ```
+
+```
+// Define The Donation Event Type 
+example of the form : 
+
+{
+  "eventID": "EVT12345",
+  "recipient": "John Doe",
+  "eventDescription": "Fundraiser to support underprivileged youth with educational resources",
+  "organization": "EduForAll Foundation",
+  "timestamp": "2024-11-20T10:30:00Z"
+}
+
+
+
+```

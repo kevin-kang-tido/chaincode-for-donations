@@ -5,6 +5,7 @@ import (
 	"chaincode-donation/utils"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -12,6 +13,8 @@ import (
 type DonationContract struct {
 	contractapi.Contract
 }
+
+// create event inside the Organization 
 
 // InitLedger adds a base set of donations to the ledger
 // InitLedger just for testing 
@@ -50,6 +53,8 @@ func (dc *DonationContract) CreateDonation(ctx contractapi.TransactionContextInt
 	if exists {
 		return fmt.Errorf("Donation with ID %s already exists", id)
 	}
+	// get the current timestamp 
+	donationTimpstemp := time.Now().UTC().Format(time.RFC3339)
 
 	donation := models.Donation{
 		ID:         id,
@@ -57,7 +62,7 @@ func (dc *DonationContract) CreateDonation(ctx contractapi.TransactionContextInt
 		Amount:     amount,
 		Message:    message,
 		Recipient:  recipient,
-		Timestamp:  timestamp,
+		Timestamp:  donationTimpstemp,
 	}
 
 	donationJSON, err := json.Marshal(donation)
@@ -97,13 +102,16 @@ func (dc *DonationContract) UpdateDonation(ctx contractapi.TransactionContextInt
 		return fmt.Errorf("donation %s does not exist", id)
 	}
 
+	// get the current timestamp 
+	donationTimpstemp := time.Now().UTC().Format(time.RFC3339)
+
 	donation := models.Donation{
 		ID:         id,
 		Donor:      donor,
 		Amount:     amount,
 		Message:    message,
 		Recipient:  recipient,
-		Timestamp:  timestamp,
+		Timestamp:  donationTimpstemp,
 	}
 
 	donationJSON, err := json.Marshal(donation)
@@ -142,6 +150,7 @@ func (dc *DonationContract) GetAllDonations(ctx contractapi.TransactionContextIn
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve donations: %v", err)
 	}
+	
 	defer resultsIterator.Close()
 
 	var donations []*models.Donation
@@ -164,4 +173,136 @@ func (dc *DonationContract) GetAllDonations(ctx contractapi.TransactionContextIn
 }
 
 
+// ==============================================================
+// create DonationEvent : 
+func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionContextInterface, id, recipient,eventName, description, timestamp string) error {
+    // Validate event existence
+    exists, err := dc.DonationExists(ctx, id)
+    if err != nil {
+        return fmt.Errorf("error checking event existence: %v", err)
+    }
+    if exists {
+        return fmt.Errorf("event with ID %s already exists", id)
+    }
+
+    // Fetch creator's MSP ID form the api and network 
+    creatorMSPID, err := utils.GetCreatorMSPID(ctx)
+    if err != nil {
+        return fmt.Errorf("error getting creator MSP ID: %v", err)
+    }
+
+    // Validate that the recipient belongs to the creator's organization
+    if !utils.IsValidRecipientForMSP(recipient, creatorMSPID) {
+        return fmt.Errorf("recipient %s does not belong to organization %s", recipient, creatorMSPID)
+    }
+
+	// validaste to get the current timestemp  
+	currentTimestamp := time.Now().UTC().Format(time.RFC3339)
+
+    event := models.DonationEvent{
+        ID:          id,
+		EventName: eventName,
+        Recipient:   recipient,
+        Description: description,
+        Timestamp:   currentTimestamp,
+        Organization: creatorMSPID,
+    }
+
+    eventJSON, err := json.Marshal(event)
+    if err != nil {
+        return fmt.Errorf("error marshaling event: %v", err)
+    }
+
+    return ctx.GetStub().PutState(id, eventJSON)
+}
+
+/// Read DonationEvent by govent ID 
+func (dc *DonationContract) ReadDonationEvent(ctx contractapi.TransactionContextInterface, id string) (*models.DonationEvent, error) {
+    eventJSON, err := ctx.GetStub().GetState(id)
+    if err != nil {
+        return nil, fmt.Errorf("error reading event: %v", err)
+    }
+    if eventJSON == nil {
+        return nil, fmt.Errorf("event with ID %s does not exist", id)
+    }
+
+    var event models.DonationEvent
+    err = json.Unmarshal(eventJSON, &event)
+    if err != nil {
+        return nil, fmt.Errorf("error unmarshaling event: %v", err)
+    }
+
+    return &event, nil
+}
+
+// UpdateDonation 
+func (dc *DonationContract) UpdateDonationEvent(ctx contractapi.TransactionContextInterface, id, recipient, description, timestamp string) error {
+    // Check if event exists
+    exists, err := dc.DonationExists(ctx, id)
+    if err != nil {
+        return fmt.Errorf("error checking event existence: %v", err)
+    }
+    if !exists {
+        return fmt.Errorf("event with ID %s does not exist", id)
+    }
+
+    // Update the event
+    updatedEvent := models.DonationEvent{
+        ID:          id,
+        Recipient:   recipient,
+        Description: description,
+        Timestamp:   timestamp,
+        Organization: "", // Retain the organization field or fetch dynamically
+    }
+
+    eventJSON, err := json.Marshal(updatedEvent)
+    if err != nil {
+        return fmt.Errorf("error marshaling updated event: %v", err)
+    }
+
+    return ctx.GetStub().PutState(id, eventJSON)
+}
+
+// DeleteDonationEvent
+func (dc *DonationContract) DeleteDonationEvent(ctx contractapi.TransactionContextInterface, id string) error {
+    // Check if event exists
+    exists, err := dc.DonationExists(ctx, id)
+    if err != nil {
+        return fmt.Errorf("error checking event existence: %v", err)
+    }
+    if !exists {
+        return fmt.Errorf("event with ID %s does not exist", id)
+    }
+
+    return ctx.GetStub().DelState(id)
+}
+
+// GetAllDonationEvents
+func (dc *DonationContract) GetAllDonationEvents(ctx contractapi.TransactionContextInterface) ([]*models.DonationEvent, error) {
+    iterator, err := ctx.GetStub().GetStateByRange("", "")
+    if err != nil {
+        return nil, fmt.Errorf("error retrieving events: %v", err)
+    }
+    defer iterator.Close()
+
+    var events []*models.DonationEvent
+    for iterator.HasNext() {
+        response, err := iterator.Next()
+        if err != nil {
+            return nil, fmt.Errorf("error iterating over events: %v", err)
+        }
+
+        var event models.DonationEvent
+        err = json.Unmarshal(response.Value, &event)
+        if err != nil {
+            return nil, fmt.Errorf("error unmarshaling event: %v", err)
+        }
+
+        events = append(events, &event)
+    }
+
+    return events, nil
+}
+
+// 
 

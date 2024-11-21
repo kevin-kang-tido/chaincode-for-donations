@@ -3,7 +3,6 @@ package main
 import (
 	"chaincode-donation/contract"
 	"log"
-
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
