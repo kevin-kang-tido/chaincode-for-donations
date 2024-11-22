@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/sha512"
+	"encoding/hex"
 	"encoding/json"
 
 	"github.com/golang/protobuf/proto"
@@ -44,3 +46,9 @@ func IsValidRecipientForMSP(recipient, mspID string) bool {
 // func ToJSON(data interface{}) ([]byte, error) {
 //     return json.Marshal(data)
 // }
+// generate the The uniques id 
+func GenereteHashID(donor,donationEventID string,time string) string{
+    data := donor + donationEventID 
+    hash := sha512.Sum384([]byte(data))
+    return hex.EncodeToString(hash[:])
+}

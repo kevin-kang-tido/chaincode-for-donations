@@ -13,7 +13,7 @@
         // find the donation by id 
         "query":"ReadDonation",
         "args":[
-            "donation6"
+            "7d1f32229abb6449cdf006587c698ce4f2bc532140ef8861eab537baf69f53f2965dc66f4768dd487e98d338bf97585b"
         ]
 
     },
@@ -21,12 +21,12 @@
         // create donation 
         "invoke":"CreateDonation",
         "args":[
-            "donation6",
-            "kevin",
-            "500",
-            "Dirnk water pro!",
-            "CharityK",
-            "2023-11-13T10:00:00R"
+            "",
+            "kevinEventOK121223",
+            "kevin tido",
+            500,
+            "Dirnk water more pro!",
+            "CharityK"
         ]
     },
     {
@@ -66,7 +66,7 @@
     //create DonationEvent
     "invoke":"CreateDonationEvent",
      "args":[
-        "kevinEventOK124",
+        "kevinEventOK121223",
         "Education for Young Boy",
         "Kay Kang",
         "The Pupose of creating this event is to motivite young generate to work harder!",
@@ -81,7 +81,7 @@
     {
         "query":"ReadDonationEvent",
         "args":[
-            "kevinEventOK124"
+            "kevinEventOK1244"
         ]
     },
     {
@@ -103,9 +103,6 @@
         
 
     }
-
-
-
 
 
 ]

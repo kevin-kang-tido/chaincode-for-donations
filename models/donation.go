@@ -1,11 +1,12 @@
 package models
 
 
-// define the donation entities 
+// define the donation entities
 type Donation struct {
 	ID         string `json:"id"`
+	DonationEventID string `json:donationEventID`
 	Donor      string `json:"donor"`
-	Amount     int    `json:"amount"`
+	Amount     float32 `json:"amount"`
 	Message    string `json:"message"`
 	Recipient  string `json:"recipient"`
 	Timestamp  string `json:"timestamp"`
