@@ -53,3 +53,5 @@ func GenereteHashID(donor,donationEventID string) string{
     hash := sha512.Sum384([]byte(data))
     return hex.EncodeToString(hash[:])
 }
+
+// 

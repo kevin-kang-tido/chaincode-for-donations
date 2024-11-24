@@ -129,6 +129,7 @@ func (dc *DonationContract) GetAllDonationEvents(ctx contractapi.TransactionCont
     defer iterator.Close()
 
     var events []*models.DonationEvent
+
     for iterator.HasNext() {
         response, err := iterator.Next()
         if err != nil {
@@ -136,10 +137,14 @@ func (dc *DonationContract) GetAllDonationEvents(ctx contractapi.TransactionCont
         }
 
         var event models.DonationEvent
+
         err = json.Unmarshal(response.Value, &event)
         if err != nil {
             return nil, fmt.Errorf("error unmarshaling event: %v", err)
         }
+
+        // ensure when it's empty 
+        event.InitializeDefaults()
 
         events = append(events, &event)
     }
@@ -204,13 +209,13 @@ func (dc *DonationContract) CreateDonation(
     id  = utils.GenereteHashID(donor,donationEventID)
     
     // Check if the donation ID already exists
-    exists, err := dc.DonationExists(ctx, id)
-    if err != nil {
-        return err
-    }
-    if exists {
-        return fmt.Errorf("Donation with ID %s already exists", id)
-    }
+    // exists, err := dc.DonationExists(ctx, id)
+    // if err != nil {
+    //     return err
+    // }
+    // if exists {
+    //     return fmt.Errorf("Donation with ID %s already exists", id)
+    // }
     // go to get the donationEvent 
     eventJSON, err := ctx.GetStub().GetState(donationEventID)
     if err != nil {

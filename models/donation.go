@@ -21,3 +21,10 @@ type DonationEvent struct {
 	Organization string      `json:"organization"`
 	Donations    []Donation  `json:"donations"`
 }
+
+// Add a method to initialize Donations to an empty array if it's nil.
+func (e *DonationEvent) InitializeDefaults() {
+    if e.Donations == nil {
+        e.Donations = []Donation{}
+    }
+}
