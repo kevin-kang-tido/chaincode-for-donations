@@ -17,7 +17,7 @@ type DonationContract struct {
 // create event inside the Organization 
 // ==============================================================
 // create DonationEvent : 
-func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionContextInterface, id, recipient,eventName, description, timestamp string) error {
+func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionContextInterface, id,eventName,recipient, description, timestamp string) error {
     // Validate event existence
     exists, err := dc.DonationExists(ctx, id)
     if err != nil {
@@ -42,12 +42,13 @@ func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionConte
 	currentTimestamp := time.Now().UTC().Format(time.RFC3339)
 
     event := models.DonationEvent{
-        ID:          id,
+        ID: id,
 		EventName: eventName,
-        Recipient:   recipient,
+        Recipient:recipient,
         Description: description,
         Timestamp:   currentTimestamp,
         Organization: creatorMSPID,
+        Donations: []models.Donation{}, // start with the empty 
     }
 
     eventJSON, err := json.Marshal(event)
@@ -58,9 +59,11 @@ func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionConte
     return ctx.GetStub().PutState(id, eventJSON)
 }
 
-/// Read DonationEvent by govent ID 
+/// Read only DonationEvent by govent ID 
 func (dc *DonationContract) ReadDonationEvent(ctx contractapi.TransactionContextInterface, id string) (*models.DonationEvent, error) {
+    
     eventJSON, err := ctx.GetStub().GetState(id)
+    
     if err != nil {
         return nil, fmt.Errorf("error reading event: %v", err)
     }
@@ -76,7 +79,6 @@ func (dc *DonationContract) ReadDonationEvent(ctx contractapi.TransactionContext
 
     return &event, nil
 }
-
 // UpdateDonation 
 func (dc *DonationContract) UpdateDonationEvent(ctx contractapi.TransactionContextInterface, id, recipient, description, timestamp string) error {
     // Check if event exists
@@ -104,7 +106,6 @@ func (dc *DonationContract) UpdateDonationEvent(ctx contractapi.TransactionConte
 
     return ctx.GetStub().PutState(id, eventJSON)
 }
-
 // DeleteDonationEvent
 func (dc *DonationContract) DeleteDonationEvent(ctx contractapi.TransactionContextInterface, id string) error {
     // Check if event exists
@@ -145,7 +146,7 @@ func (dc *DonationContract) GetAllDonationEvents(ctx contractapi.TransactionCont
 
     return events, nil
 }
-// 
+
 
 // Check the DonatinEvent Exsit or Not 
 func (dc *DonationContract) DonationEventExists(ctx contractapi.TransactionContextInterface,donationEventID string)(bool,error){
@@ -188,22 +189,19 @@ func (dc *DonationContract) InitLedger(ctx contractapi.TransactionContextInterfa
 	return nil
 }
 
-
-
-
 // CreateDonation registers a new donation in CouchDB
 func (dc *DonationContract) CreateDonation(
     ctx contractapi.TransactionContextInterface,
     id,donationEventID string,
     donor string,
-     amount float32,
-      message string,
-       recipient string) error {
+    amount float32,
+    message string,
+    recipient string) error {
 
     // Get the current timestamp
     donationTimestamp := time.Now().UTC().Format(time.RFC3339)
     // generate a unquine id for a donation 
-    id  = utils.GenereteHashID(donor,donationEventID,donationTimestamp)
+    id  = utils.GenereteHashID(donor,donationEventID)
     
     // Check if the donation ID already exists
     exists, err := dc.DonationExists(ctx, id)
@@ -212,6 +210,15 @@ func (dc *DonationContract) CreateDonation(
     }
     if exists {
         return fmt.Errorf("Donation with ID %s already exists", id)
+    }
+    // go to get the donationEvent 
+    eventJSON, err := ctx.GetStub().GetState(donationEventID)
+    if err != nil {
+        return fmt.Errorf("Failed to retrieve the donationEvent : %v",eventJSON)
+    }
+
+    if eventJSON == nil {
+        return fmt.Errorf("The DonationEvent with given %s dosen't exsit ",donationEventID)
     }
 
     // Check if the specified DonationEvent exists
@@ -223,6 +230,12 @@ func (dc *DonationContract) CreateDonation(
         return fmt.Errorf("donation event with ID %s does not exist", donationEventID)
     }
 
+    // Unmashal  the donationEvent 
+    var donationEvent models.DonationEvent
+    
+    if err := json.Unmarshal(eventJSON, &donationEvent); err != nil {
+        return fmt.Errorf("Failed to Unmashal the DonationEvent: %v ",err)
+    }
 
     // Create the donation object
     donation := models.Donation{
@@ -237,11 +250,28 @@ func (dc *DonationContract) CreateDonation(
 
     // Serialize the donation object and save it to the ledger
     donationJSON, err := json.Marshal(donation)
+
     if err != nil {
-        return err
+        return fmt.Errorf("failed to Marshal the Donation:  %v",err)
+    }
+   if err := ctx.GetStub().PutState(id,donationJSON); err != nil{
+    return fmt.Errorf("Error to create the Donation: %v",err)
+   }
+
+   // append new donation to the doationEvent 
+   donationEvent.Donations = append(donationEvent.Donations,donation)
+
+    // Serialize and update the DonationEvent in the ledger
+    updatedEventJSON, err := json.Marshal(donationEvent)
+
+    if err != nil {
+        return fmt.Errorf("failed to marshal updated donation event: %v", err)
+    }
+    if err := ctx.GetStub().PutState(donationEventID, updatedEventJSON); err != nil {
+        return fmt.Errorf("failed to update donation event: %v", err)
     }
 
-    return ctx.GetStub().PutState(id, donationJSON)
+    return nil
 }
 
 

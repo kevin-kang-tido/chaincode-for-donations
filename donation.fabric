@@ -13,7 +13,7 @@
         // find the donation by id 
         "query":"ReadDonation",
         "args":[
-            "7d1f32229abb6449cdf006587c698ce4f2bc532140ef8861eab537baf69f53f2965dc66f4768dd487e98d338bf97585b"
+            "03a187b5f8321b772a9cc223ce16d125a9199ac7f42b09475a9fe7685c22582da6fef085faf520214c9eefb683372beb"
         ]
 
     },
@@ -22,7 +22,8 @@
         "invoke":"CreateDonation",
         "args":[
             "",
-            "kevinEventOK121223",
+            // donation event 
+            "kevinEventOK99999112",
             "kevin tido",
             500,
             "Dirnk water more pro!",
@@ -45,7 +46,7 @@
         // DonationExists TRUE == EXSITING AND FALSE IS NOT EXSITING
         "query":"DonationExists",
         "args":[
-            "donation6"
+            "kevinEventOK99999112"
         ]
     },
     {
@@ -66,13 +67,20 @@
     //create DonationEvent
     "invoke":"CreateDonationEvent",
      "args":[
-        "kevinEventOK121223",
+        "kevinEventOK99999112",
         "Education for Young Boy",
         "Kay Kang",
         "The Pupose of creating this event is to motivite young generate to work harder!",
         "ISTAD Organization"
      ]
     },
+    // {
+    //     // read the donation with the donationevent 
+    //     "query": "ReadDonationEventWithDonations",
+    //     "args": [
+    //         "kevinEventOK99999112"
+    //     ]
+    // },
     {
       "query":"GetAllDonationEvents",
       "args":[]
@@ -81,7 +89,7 @@
     {
         "query":"ReadDonationEvent",
         "args":[
-            "kevinEventOK1244"
+            "kevinEventOK99999112"
         ]
     },
     {
@@ -100,8 +108,6 @@
         "args":[
             "kevinEventOK124"
         ]
-        
-
     }
 
 

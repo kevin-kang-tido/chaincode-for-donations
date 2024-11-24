@@ -1,23 +1,23 @@
 package models
 
-
-// define the donation entities
+// Define the donation entities
 type Donation struct {
-	ID         string `json:"id"`
-	DonationEventID string `json:donationEventID`
-	Donor      string `json:"donor"`
-	Amount     float32 `json:"amount"`
-	Message    string `json:"message"`
-	Recipient  string `json:"recipient"`
-	Timestamp  string `json:"timestamp"`
+	ID              string  `json:"id"`
+	DonationEventID string  `json:"donationEventID"`
+	Donor           string  `json:"donor"`
+	Amount          float32 `json:"amount"`
+	Message         string  `json:"message"`
+	Recipient       string  `json:"recipient"`
+	Timestamp       string  `json:"timestamp"`
 }
 
-// Define the DonatinEvent 
+// Define the DonationEvent
 type DonationEvent struct {
-    ID           string `json:"id"`
-	EventName    string  `json:eventName`
-    Recipient    string `json:"recipient"`
-    Description  string `json:"description"`
-    Timestamp    string `json:"timestamp"`
-    Organization string `json:"organization"`
+	ID           string      `json:"id"`
+	EventName    string      `json:"eventName"`
+	Recipient    string      `json:"recipient"`
+	Description  string      `json:"description"`
+	Timestamp    string      `json:"timestamp"`
+	Organization string      `json:"organization"`
+	Donations    []Donation  `json:"donations"`
 }

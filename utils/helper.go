@@ -40,6 +40,7 @@ func GetCreatorMSPID(ctx contractapi.TransactionContextInterface) (string, error
 
 func IsValidRecipientForMSP(recipient, mspID string) bool {
     // Add logic to check recipient's organization
+
     return true // Replace with actual validation
 }
 
@@ -47,7 +48,7 @@ func IsValidRecipientForMSP(recipient, mspID string) bool {
 //     return json.Marshal(data)
 // }
 // generate the The uniques id 
-func GenereteHashID(donor,donationEventID string,time string) string{
+func GenereteHashID(donor,donationEventID string) string{
     data := donor + donationEventID 
     hash := sha512.Sum384([]byte(data))
     return hex.EncodeToString(hash[:])
