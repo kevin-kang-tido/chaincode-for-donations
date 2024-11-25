@@ -122,7 +122,9 @@ func (dc *DonationContract) DeleteDonationEvent(ctx contractapi.TransactionConte
 
 // GetAllDonationEvents
 func (dc *DonationContract) GetAllDonationEvents(ctx contractapi.TransactionContextInterface) ([]*models.DonationEvent, error) {
+    
     iterator, err := ctx.GetStub().GetStateByRange("", "")
+    
     if err != nil {
         return nil, fmt.Errorf("error retrieving events: %v", err)
     }

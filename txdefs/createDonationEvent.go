@@ -12,7 +12,6 @@ import (
 	sw "github.com/hyperledger-labs/cc-tools/stubwrapper"
 	tx "github.com/hyperledger-labs/cc-tools/transactions"
 	"github.com/hyperledger/fabric-protos-go/msp"
-	// "github.com/hyperledger/fabric/protos/msp"
 )
 
 //  Tasaction Definition
