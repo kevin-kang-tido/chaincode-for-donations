@@ -18,6 +18,7 @@ type DonationContract struct {
 // ==============================================================
 // create DonationEvent 
 func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionContextInterface, id,eventName,recipient, description, timestamp string) error {
+    
     // Validate event existence
     exists, err := dc.DonationExists(ctx, id)
 
@@ -40,15 +41,24 @@ func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionConte
         return fmt.Errorf("recipient %s does not belong to organization %s", recipient, creatorMSPID)
     }
 
-	// validaste to get the current timestemp  
-	currentTimestamp := time.Now().UTC().Format(time.RFC3339)
+    // get the current timesteamp form transaction  
+    currentTimeStampProto , err := ctx.GetStub().GetTxTimestamp()
+    if err != nil {
+        return fmt.Errorf("Faild to get the currentTimeStamp: %v",err)
+    }
+
+    // the the brotobuf to timetime to time.time
+    currentTimeStamp := time.Unix(currentTimeStampProto.Seconds,int64(currentTimeStampProto.Nanos))
+    // // Format as RFC3339 string
+    currentTimeStampFormat := currentTimeStamp.Format(time.RFC3339)
+
 
     event := models.DonationEvent{
         ID: id,
 		EventName: eventName,
         Recipient:recipient,
         Description: description,
-        Timestamp:   currentTimestamp,
+        Timestamp:   currentTimeStampFormat,
         Organization: creatorMSPID,
         Donations: []models.Donation{},
     }
@@ -94,12 +104,25 @@ func (dc *DonationContract) UpdateDonationEvent(ctx contractapi.TransactionConte
         return fmt.Errorf("event with ID %s does not exist", id)
     }
 
+    // get the current timesteamp form transaction  
+    currentTimeStampProto , err := ctx.GetStub().GetTxTimestamp()
+    if err != nil {
+        return fmt.Errorf("Faild to get the currentTimeStamp: %v",err)
+    }
+
+    // the the brotobuf to timetime to time.time
+    currentTimeStamp := time.Unix(currentTimeStampProto.Seconds,int64(currentTimeStampProto.Nanos))
+    // // Format as RFC3339 string
+    currentTimeStampFormat := currentTimeStamp.Format(time.RFC3339)
+
+    
+
     // Update the event
     updatedEvent := models.DonationEvent{
         ID:          id,
         Recipient:   recipient,
         Description: description,
-        Timestamp:   timestamp,
+        Timestamp:   currentTimeStampFormat,
         Organization: "", // Retain the organization field or fetch dynamically
     }
 
@@ -211,7 +234,7 @@ func (dc *DonationContract) CreateDonation(
     recipient string) error {
 
     // Get the current timestamp
-    donationTimestamp := time.Now().UTC().Format(time.RFC3339)
+    // donationTimestamp := time.Now().UTC().Format(time.RFC3339)
     // generate a unquine id for a donation 
     id  = utils.GenereteHashID(donor,donationEventID)
     
@@ -250,6 +273,18 @@ func (dc *DonationContract) CreateDonation(
         return fmt.Errorf("Failed to Unmashal the DonationEvent: %v ",err)
     }
 
+    // get the current timestemp 
+    // get the current timesteamp form transaction  
+    currentTimeStampProto , err := ctx.GetStub().GetTxTimestamp()
+    if err != nil {
+        return fmt.Errorf("Faild to get the currentTimeStamp: %v",err)
+    }
+
+    // the the brotobuf to timetime to time.time
+    currentTimeStamp := time.Unix(currentTimeStampProto.Seconds,int64(currentTimeStampProto.Nanos))
+    // // Format as RFC3339 string
+    currentTimeStampFormat := currentTimeStamp.Format(time.RFC3339)
+
     // Create the donation object
     donation := models.Donation{
         ID:            id,
@@ -258,7 +293,7 @@ func (dc *DonationContract) CreateDonation(
         Amount:        amount,
         Message:       message,
         Recipient:     recipient,
-        Timestamp:     donationTimestamp,
+        Timestamp:     currentTimeStampFormat,
     }
 
     // Serialize the donation object and save it to the ledger
@@ -327,8 +362,20 @@ func (dc *DonationContract) UpdateDonation(ctx contractapi.TransactionContextInt
 		return fmt.Errorf("donation event with ID %s does not exist", donationEventID)
 	}
 
-	// get the current timestamp 
-	donationTimpstemp := time.Now().UTC().Format(time.RFC3339)
+	// // get the current timestamp 
+	// donationTimpstemp := time.Now().UTC().Format(time.RFC3339)
+    
+    // get the current timesteamp form transaction  
+    currentTimeStampProto , err := ctx.GetStub().GetTxTimestamp()
+    if err != nil {
+        return fmt.Errorf("Faild to get the currentTimeStamp: %v",err)
+    }
+
+    // the the brotobuf to timetime to time.time
+    currentTimeStamp := time.Unix(currentTimeStampProto.Seconds,int64(currentTimeStampProto.Nanos))
+    // // Format as RFC3339 string
+    currentTimeStampFormat := currentTimeStamp.Format(time.RFC3339)
+    
 
 	donation := models.Donation{
 		ID:         id,
@@ -337,7 +384,7 @@ func (dc *DonationContract) UpdateDonation(ctx contractapi.TransactionContextInt
 		Amount:     amount,
 		Message:    message,
 		Recipient:  recipient,
-		Timestamp:  donationTimpstemp,
+		Timestamp:  currentTimeStampFormat,
 	}
 
 	donationJSON, err := json.Marshal(donation)
