@@ -48,7 +48,7 @@ example of the form :
 ```
 
 
-## update the README.md
+##
 
 # Donation Chaincode
 
@@ -71,11 +71,10 @@ This project implements a donation management system as a Hyperledger Fabric cha
 - **Update Donation**: Updates the details of an existing donation.
 - **Delete Donation**: Deletes a donation entry from the ledger.
 - **Get All Donations**: Retrieves all donations from the ledger.
-
 ---
 
 ## Prerequisites
-
+- cc-tools
 - [Hyperledger Fabric v2.x](https://hyperledger-fabric.readthedocs.io/) installed.
 - CouchDB configured as the state database.
 - `fabric-contract-api-go` for chaincode development in Go.
