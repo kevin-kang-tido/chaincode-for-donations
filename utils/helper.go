@@ -25,12 +25,15 @@ func FromJSON(data []byte, obj interface{}) error {
 
 
 func GetCreatorMSPID(ctx contractapi.TransactionContextInterface) (string, error) {
+    
     creator, err := ctx.GetStub().GetCreator()
+    
     if err != nil {
         return "", fmt.Errorf("error getting creator: %v", err)
     }
 
     sID := &msp.SerializedIdentity{}
+
     if err := proto.Unmarshal(creator, sID); err != nil {
         return "", fmt.Errorf("error unmarshaling SerializedIdentity: %v", err)
     }
@@ -40,6 +43,9 @@ func GetCreatorMSPID(ctx contractapi.TransactionContextInterface) (string, error
 
 func IsValidRecipientForMSP(recipient, mspID string) bool {
     // Add logic to check recipient's organization
+    // logic to validate the recipient and mspID 
+
+
 
     return true // Replace with actual validation
 }

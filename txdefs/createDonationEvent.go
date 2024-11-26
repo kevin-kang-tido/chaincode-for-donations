@@ -15,8 +15,8 @@ import (
 )
 
 //  Tasaction Definition
-// create the Donation Event
-// CreateDonationEvent defines a transaction for creating new donation events.
+//  create the Donation Event
+//  CreateDonationEvent defines a transaction for creating new donation events.
 var CreateDonationEvent = tx.Transaction{
     Tag:         "createDonationEvent",
     Label:       "Create Donation Event",
@@ -24,11 +24,11 @@ var CreateDonationEvent = tx.Transaction{
     Method:      "POST",
 
     Callers: []accesscontrol.Caller{
-        {
-			// make this dynamic later 
-            MSP: "org1MSP", // only org1MSP can create the Event in the  org
-            OU:  "admin",
-        },
+        // {
+		// 	// make this dynamic later 
+        //     MSP: "org1MSP", // Only org1MSP can create the Event in the  org
+        //     OU:  "admin",
+        // },
         // {
         //     MSP: "org2MSP",
         //     OU:  "admin",
@@ -74,8 +74,9 @@ var CreateDonationEvent = tx.Transaction{
 
         // Retrieve client's MSP ID. form  our api 
         // clientMSPID, err := stub.GetClientMSPID()
-    // Retrieve client's MSP ID from the transaction creator's certificate
+        // Retrieve client's MSP ID from the transaction creator's certificate
     creator, err := stub.Stub.GetCreator()
+    
     if err != nil {
         return nil, errors.WrapError(err, "Failed to get transaction creator")
     }
