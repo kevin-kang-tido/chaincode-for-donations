@@ -28,3 +28,12 @@ func (e *DonationEvent) InitializeDefaults() {
         e.Donations = []Donation{}
     }
 }
+
+// modle for accessControll 
+// Organization Unit
+// (it should be admin or user or another role to perform the specific tasks)
+type Caller struct {
+	MSP string `json:"msp"`
+	OU  string `json:"ou"`
+	Attributes map[string]string `json:"attributes"`
+}

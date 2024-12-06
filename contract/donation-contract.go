@@ -2,10 +2,12 @@ package contract
 
 import (
 	"chaincode-donation/models"
+	// "chaincode-donation/txdefs"
 	"chaincode-donation/utils"
 	"encoding/json"
 	"fmt"
 	"time"
+
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -14,13 +16,13 @@ type DonationContract struct {
 }
 
 // ==============================================================
-// Create event inside the Organization 
+// -----> Create event inside the Organization // default OrgMSP1
 // ==============================================================
-// create DonationEvent 
+// -----> create DonationEvent 
 func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionContextInterface, id,eventName,recipient, description, timestamp string) error {
     
     // Validate event existence
-    exists, err := dc.DonationExists(ctx, id)
+    exists, err := dc.DonationEventExists(ctx, id)
 
     if err != nil {
         return fmt.Errorf("error checking event existence: %v", err)
@@ -35,6 +37,15 @@ func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionConte
     if err != nil {
         return fmt.Errorf("error getting creator MSP ID: %v", err)
     }
+
+    // Vaildate the Orgnazition with Org vs MSP client 
+    if err := utils.ValidateOrg(ctx,creatorMSPID); err != nil {
+        
+       return fmt.Errorf(" Organazition validation failed : %v ",err)
+
+    }
+    // Continue with the donation event creation logic
+    fmt.Println("Organization validated. Proceeding with event creation.")
 
     // Validate that the recipient belongs to the creator's organization
     if !utils.IsValidRecipientForMSP(recipient, creatorMSPID) {
@@ -72,7 +83,7 @@ func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionConte
     return ctx.GetStub().PutState(id, eventJSON)
 }
 
-// Read only DonationEvent by govent ID 
+// --------> Read only DonationEvent by govent ID 
 func (dc *DonationContract) ReadDonationEvent(ctx contractapi.TransactionContextInterface, id string) (*models.DonationEvent, error) {
     
     eventJSON, err := ctx.GetStub().GetState(id)
@@ -85,6 +96,7 @@ func (dc *DonationContract) ReadDonationEvent(ctx contractapi.TransactionContext
     }
 
     var event models.DonationEvent
+
     err = json.Unmarshal(eventJSON, &event)
     if err != nil {
         return nil, fmt.Errorf("error unmarshaling event: %v", err)
@@ -93,8 +105,9 @@ func (dc *DonationContract) ReadDonationEvent(ctx contractapi.TransactionContext
     return &event, nil
 }
 
-// UpdateDonation 
+// -------->   UpdateDonation 
 func (dc *DonationContract) UpdateDonationEvent(ctx contractapi.TransactionContextInterface, id, recipient, description, timestamp string) error {
+    
     // Check if event exists
     exists, err := dc.DonationExists(ctx, id)
     if err != nil {
@@ -127,6 +140,7 @@ func (dc *DonationContract) UpdateDonationEvent(ctx contractapi.TransactionConte
     }
 
     eventJSON, err := json.Marshal(updatedEvent)
+    
     if err != nil {
         return fmt.Errorf("error marshaling updated event: %v", err)
     }
@@ -134,7 +148,7 @@ func (dc *DonationContract) UpdateDonationEvent(ctx contractapi.TransactionConte
     return ctx.GetStub().PutState(id, eventJSON)
 }
 
-// DeleteDonationEvent
+// -------->  DeleteDonationEvent
 func (dc *DonationContract) DeleteDonationEvent(ctx contractapi.TransactionContextInterface, id string) error {
     // Check if event exists
     exists, err := dc.DonationExists(ctx, id)
@@ -148,7 +162,7 @@ func (dc *DonationContract) DeleteDonationEvent(ctx contractapi.TransactionConte
     return ctx.GetStub().DelState(id)
 }
 
-// GetAllDonationEvents
+// -------->  GetAllDonationEvents
 func (dc *DonationContract) GetAllDonationEvents(ctx contractapi.TransactionContextInterface) ([]*models.DonationEvent, error) {
     
     iterator, err := ctx.GetStub().GetStateByRange("", "")
@@ -182,7 +196,7 @@ func (dc *DonationContract) GetAllDonationEvents(ctx contractapi.TransactionCont
     return events, nil
 }
 
-// Check the DonatinEvent Exsit or Not 
+// ---------> Check the DonatinEvent Exsit or Not 
 func (dc *DonationContract) DonationEventExists(ctx contractapi.TransactionContextInterface,donationEventID string)(bool,error){
    // event 
    eventJSON, err := ctx.GetStub().GetState(donationEventID);
@@ -198,6 +212,7 @@ func (dc *DonationContract) DonationEventExists(ctx contractapi.TransactionConte
 // ================================================================
 // InitLedger adds a base set of donations to the ledger
 // InitLedger just for testing 
+
 func (dc *DonationContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
 	donations := []models.Donation{
 		{ID: "donation1", Donor: "Alice", Amount: 100, Message: "For education", Recipient: "CharityA", Timestamp: "2023-10-10T10:00:00Z"},
@@ -209,7 +224,8 @@ func (dc *DonationContract) InitLedger(ctx contractapi.TransactionContextInterfa
 
 	for _, donation := range donations {
 		// donationJSON, err := json.Marshal(donation)
-	    donationJSON, err := utils.ToJSON(donation)
+        donationJSON, err := json.Marshal(donation)
+	    // donationJSON, err := utils.ToJSON(donation)
 		if err != nil {
 			return fmt.Errorf("failed to marshal donation: %v", err)
 		}

@@ -8,14 +8,24 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric-protos-go/msp"
-
+    "github.com/hyperledger-labs/cc-tools/errors"
 	// "github.com/golang/protobuf/proto"
 	"fmt"
 )
 
 // ToJSON converts an object to JSON string
-func ToJSON(data interface{}) ([]byte, error) {
-	return json.Marshal(data)
+// func ToJSON(data interface{}) ([]byte, error) {
+// 	return json.Marshal(data)
+// }
+
+// create toJson Return as ICCError
+func ToJSON(data interface{}) ([]byte, errors.ICCError){
+    assetJSON, err := json.Marshal(data)
+
+    if err != nil {
+        return nil,errors.WrapError(err,"Failed t omarshal dasta to JSON")
+    }
+    return assetJSON,nil
 }
 
 // FromJSON converts JSON  to  object
@@ -60,4 +70,35 @@ func GenereteHashID(donor,donationEventID string) string{
     return hex.EncodeToString(hash[:])
 }
 
-// 
+func ValidateOrg(ctx contractapi.TransactionContextInterface, requiredOrg string) error {
+
+    // Retrieve the serialized identity of the client
+    creator, err := ctx.GetStub().GetCreator()
+
+    fmt.Printf(" ==> Just Print Creator: %s ",creator)
+
+    if err != nil {
+        return fmt.Errorf("failed to get client identity: %v", err)
+    }
+
+    // Deserialize the serialized identity
+    serializedIdentity := &msp.SerializedIdentity{}
+
+    err = proto.Unmarshal(creator, serializedIdentity)
+    if err != nil {
+        return fmt.Errorf("failed to deserialize identity: %v", err)
+    }
+
+    // Extract MSP ID from the deserialized identity
+    mspID := serializedIdentity.Mspid
+
+    // Validate the MSP ID
+    if mspID != requiredOrg {
+        return fmt.Errorf("access denied: required organization: %s, but got: %s", requiredOrg, mspID)
+    }
+
+    return nil
+}
+
+
+
