@@ -22,13 +22,13 @@ var CreateDonationEvent = tx.Transaction{
 	// who can  call this 
 	Callers: []accesscontrol.Caller{
 		{
-			MSP: "OrgMSP1",
-			OU: "admin",
+			MSP: "OrgMSP3",
+			// OU: "admin",
 		},
 		{
 			// will  change it only org1 can create donationEvent
 			MSP: "OrgMSP2",
-			OU: "admin",
+			// OU: "admin",
 		},
 	},
 	Args: []tx.Argument{

@@ -67,8 +67,8 @@
     //create DonationEvent
     "invoke":"CreateDonationEvent",
      "args":[
-        "kevinEventOK9999911223344",
-        "Education for Young Boy",
+        "kevinEventOK9999911223344556677889",
+        "Education form Org334 ",
         "Kay Kang",
         "The Pupose of creating this event is to motivite young generate to work harder!",
         "ISTAD Organization"
@@ -82,7 +82,7 @@
     {
         "query":"ReadDonationEvent",
         "args":[
-            "kevinEventOK9999911223344"
+            "kevinEventOK9999911223344556677889"
         ]
     },
     {

@@ -29,11 +29,22 @@ func (e *DonationEvent) InitializeDefaults() {
     }
 }
 
+// text validate with the response 
+type TxResponse struct {
+	TxID    string `json:"txID"`
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+
+
 // modle for accessControll 
 // Organization Unit
 // (it should be admin or user or another role to perform the specific tasks)
-type Caller struct {
-	MSP string `json:"msp"`
-	OU  string `json:"ou"`
-	Attributes map[string]string `json:"attributes"`
-}
+// type Caller struct {
+// 	MSP string `json:"msp"`
+// 	OU  string `json:"ou"`
+// 	Attributes map[string]string `json:"attributes"`
+// }
+
+

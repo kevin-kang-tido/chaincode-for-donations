@@ -70,35 +70,34 @@ func GenereteHashID(donor,donationEventID string) string{
     return hex.EncodeToString(hash[:])
 }
 
-func ValidateOrg(ctx contractapi.TransactionContextInterface, requiredOrg string) error {
 
+func ValidateOrg(ctx contractapi.TransactionContextInterface, allowedOrgs ...string) error {
     // Retrieve the serialized identity of the client
     creator, err := ctx.GetStub().GetCreator()
-
-    fmt.Printf(" ==> Just Print Creator: %s ",creator)
-
     if err != nil {
         return fmt.Errorf("failed to get client identity: %v", err)
     }
 
     // Deserialize the serialized identity
     serializedIdentity := &msp.SerializedIdentity{}
-
-    err = proto.Unmarshal(creator, serializedIdentity)
-    if err != nil {
+    if err = proto.Unmarshal(creator, serializedIdentity); err != nil {
         return fmt.Errorf("failed to deserialize identity: %v", err)
     }
 
-    // Extract MSP ID from the deserialized identity
+    // extract MSP ID from the deserialized identity
     mspID := serializedIdentity.Mspid
 
-    // Validate the MSP ID
-    if mspID != requiredOrg {
-        return fmt.Errorf("access denied: required organization: %s, but got: %s", requiredOrg, mspID)
+    // check if MSP ID is in the list of allowed or Not  organizations
+    for _, org := range allowedOrgs {
+        if mspID == org {
+            return nil // Organization is valid 
+        }
     }
 
-    return nil
+    // Return an error if the MSP ID is not in the allowed list
+    return fmt.Errorf("access denied: %s is not in the allowed organizations: %v", mspID, allowedOrgs)
 }
+
 
 
 

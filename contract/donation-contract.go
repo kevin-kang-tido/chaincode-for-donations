@@ -14,74 +14,135 @@ import (
 type DonationContract struct {
 	contractapi.Contract
 }
+// text for reponse 
+type TxResponse struct {
+	TxID    string `json:"txID"`
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
 
 // ==============================================================
 // -----> Create event inside the Organization // default OrgMSP1
 // ==============================================================
-// -----> create DonationEvent 
-func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionContextInterface, id,eventName,recipient, description, timestamp string) error {
+// -----> create DonationEvent old response 
+
+// func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionContextInterface, id,eventName,recipient, description, timestamp string) error {
     
-    // Validate event existence
-    exists, err := dc.DonationEventExists(ctx, id)
+//     // Validate event existence
+//     exists, err := dc.DonationEventExists(ctx, id)
 
-    if err != nil {
-        return fmt.Errorf("error checking event existence: %v", err)
-    }
-    if exists {
-        return fmt.Errorf("event with ID %s already exists", id)
-    }
+//     if err != nil {
+//         return fmt.Errorf("error checking event existence: %v", err)
+//     }
+//     if exists {
+//         return fmt.Errorf("event with ID %s already exists", id)
+//     }
 
-    // Fetch creator's MSP ID form the api and network 
-    creatorMSPID, err := utils.GetCreatorMSPID(ctx)
+//     // Fetch creator's MSP ID form the api and network 
+//     creatorMSPID, err := utils.GetCreatorMSPID(ctx)
 
-    if err != nil {
-        return fmt.Errorf("error getting creator MSP ID: %v", err)
-    }
+//     if err != nil {
+//         return fmt.Errorf("error getting creator MSP ID: %v", err)
+//     }
 
-    // Vaildate the Orgnazition with Org vs MSP client 
-    if err := utils.ValidateOrg(ctx,creatorMSPID); err != nil {
+//     // Vaildate the Orgnazition with Org vs MSP client 
+//     if err := utils.ValidateOrg(ctx,creatorMSPID); err != nil {
         
-       return fmt.Errorf(" Organazition validation failed : %v ",err)
+//        return fmt.Errorf(" Organazition validation failed : %v ",err)
 
-    }
-    // Continue with the donation event creation logic
-    fmt.Println("Organization validated. Proceeding with event creation.")
+//     }
+//     // get the current timesteamp form transaction  
+//     currentTimeStampProto , err := ctx.GetStub().GetTxTimestamp()
+//     if err != nil {
+//         return fmt.Errorf("Faild to get the currentTimeStamp: %v",err)
+//     }
 
-    // Validate that the recipient belongs to the creator's organization
-    if !utils.IsValidRecipientForMSP(recipient, creatorMSPID) {
-        return fmt.Errorf("recipient %s does not belong to organization %s", recipient, creatorMSPID)
-    }
-
-    // get the current timesteamp form transaction  
-    currentTimeStampProto , err := ctx.GetStub().GetTxTimestamp()
-    if err != nil {
-        return fmt.Errorf("Faild to get the currentTimeStamp: %v",err)
-    }
-
-    // the the brotobuf to timetime to time.time
-    currentTimeStamp := time.Unix(currentTimeStampProto.Seconds,int64(currentTimeStampProto.Nanos))
-    // // Format as RFC3339 string
-    currentTimeStampFormat := currentTimeStamp.Format(time.RFC3339)
+//     // the the brotobuf to timetime to time.time
+//     currentTimeStamp := time.Unix(currentTimeStampProto.Seconds,int64(currentTimeStampProto.Nanos))
+//     // // Format as RFC3339 string
+//     currentTimeStampFormat := currentTimeStamp.Format(time.RFC3339)
 
 
-    event := models.DonationEvent{
-        ID: id,
-		EventName: eventName,
-        Recipient:recipient,
-        Description: description,
-        Timestamp:   currentTimeStampFormat,
-        Organization: creatorMSPID,
-        Donations: []models.Donation{},
-    }
+//     event := models.DonationEvent{
+//         ID: id,
+// 		EventName: eventName,
+//         Recipient:recipient,
+//         Description: description,
+//         Timestamp:   currentTimeStampFormat,
+//         Organization: creatorMSPID,
+//         Donations: []models.Donation{},
+//     }
 
-    eventJSON, err := json.Marshal(event)
+//     eventJSON, err := json.Marshal(event)
 
-    if err != nil {
-        return fmt.Errorf("error marshaling event: %v", err)
-    }
+//     if err != nil {
+//         return fmt.Errorf("error marshaling event: %v", err)
+//     }
 
-    return ctx.GetStub().PutState(id, eventJSON)
+//     return ctx.GetStub().PutState(id, eventJSON)
+// }
+
+// CreateDonationEvent handles the creation of a donation event.
+func (dc *DonationContract) CreateDonationEvent(ctx contractapi.TransactionContextInterface, id, eventName, recipient, description, timestamp string) (*TxResponse, error) {
+	// Ensure the MSP of the creator is valid
+	creatorMSP, err := utils.GetCreatorMSPID(ctx)
+	if err != nil {
+		return &TxResponse{TxID: ctx.GetStub().GetTxID(), Success: false, Message: "Failed to retrieve creator MSP."}, err
+	}
+
+	if err := utils.ValidateOrg(ctx, creatorMSP); err != nil {
+		return &TxResponse{TxID: ctx.GetStub().GetTxID(), Success: false, Message: "Unauthorized MSP."}, err
+	}
+
+	// Get the current transaction timestamp
+	currentTimeStampProto, err := ctx.GetStub().GetTxTimestamp()
+	if err != nil {
+		return &TxResponse{TxID: ctx.GetStub().GetTxID(), Success: false, Message: "Failed to get transaction timestamp."}, fmt.Errorf("failed to get the current timestamp: %v", err)
+	}
+
+	// Convert protobuf timestamp to time.Time
+	currentTimeStamp := time.Unix(currentTimeStampProto.Seconds, int64(currentTimeStampProto.Nanos))
+	// Format as RFC3339 string
+	currentTimeStampFormat := currentTimeStamp.Format(time.RFC3339)
+
+	// Check if the event already exists
+	exists, err := dc.DonationEventExists(ctx, id)
+	if err != nil {
+		return &TxResponse{TxID: ctx.GetStub().GetTxID(), Success: false, Message: "Error checking event existence."}, err
+	}
+	if exists {
+		return &TxResponse{TxID: ctx.GetStub().GetTxID(), Success: false, Message: "Donation event already exists."}, fmt.Errorf("donation event %s already exists", id)
+	}
+
+	// Create the donation event
+	event := models.DonationEvent{
+		ID:           id,
+		EventName:    eventName,
+		Recipient:    recipient,
+		Description:  description,
+		Timestamp:    currentTimeStampFormat,
+		Organization: creatorMSP,
+		Donations:    []models.Donation{},
+	}
+
+    //  log which organizaton create the donation event 
+    fmt.Printf("Donation event %s was created by Organization %s\n",id,event.Organization)
+
+	// Serialize and save the donation event
+	eventBytes, err := utils.ToJSON(event)
+	if err != nil {
+		return &TxResponse{TxID: ctx.GetStub().GetTxID(), Success: false, Message: "Failed to serialize event."}, err
+	}
+
+	err = ctx.GetStub().PutState(id, eventBytes)
+	if err != nil {
+		return &TxResponse{TxID: ctx.GetStub().GetTxID(), Success: false, Message: "Failed to save event to ledger."}, err
+	}
+
+	return &TxResponse{TxID: ctx.GetStub().GetTxID(), Success: true, Message: "Donation event created successfully."}, nil
 }
+
+
 
 // --------> Read only DonationEvent by govent ID 
 func (dc *DonationContract) ReadDonationEvent(ctx contractapi.TransactionContextInterface, id string) (*models.DonationEvent, error) {
